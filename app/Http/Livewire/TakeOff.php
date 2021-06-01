@@ -74,7 +74,7 @@ class TakeOff extends Component
     {
         //TODO update this please later
 
-        $result = json_decode(Http::acceptJson()->get('shed.test/api/jobs', ['client_ref' => $this->client_ref]));
+        $result = json_decode(Http::acceptJson()->get('https://shedzone.net/api/jobs', ['client_ref' => $this->client_ref]));
         dd($result);
 //        if (count($result) != 0) {
 //            $this->job = $result[0];

@@ -14,11 +14,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-//        $this->call(ShedStructureSeeder::class);
-//        $this->call(PartUsageSeeder::class);
-//        $this->call(StructurePartSeeder::class);
-//        $this->call(PartComponentSeeder::class);
-//        $this->call(PartSetSeeder::class);
+        $this->call(ShedStructureSeeder::class);
+        $this->call(PartUsageSeeder::class);
+        $this->call(StructurePartSeeder::class);
+        $this->call(PartComponentSeeder::class);
+        $this->call(PartSetSeeder::class);
         $this->call(PartSetOverrideSeeder::class);
     }
 }

@@ -27,6 +27,7 @@ class TakeOff extends Component
     public $has_job = false;
 
     public $job;
+
     protected $rules = [
         'client_ref' => 'required',
     ];

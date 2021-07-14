@@ -22,11 +22,9 @@ class TakeOff extends Component
     public $usages;
     public $sets;
     public $set_overrides;
-
-    public $client_ref;
-    public $has_job = false;
-
-    public $job;
+    public $client_ref = 'NE-00138';
+    public $has_job = true;
+    public $job = [];
 
     protected $rules = [
         'client_ref' => 'required',
@@ -45,6 +43,21 @@ class TakeOff extends Component
         $this->components = $this->part->components;
         $this->sets = $this->part->sets;
         $this->set_overrides = $this->part->overrides;
+
+
+        //Todo Remove this later
+        $result = json_decode(Http::acceptJson()->get('https://shedzone.net/api/jobs', ['client_ref' => $this->client_ref]));
+        if (count($result) != 0) {
+            $this->job = (json_decode(json_encode($result[0]), true));
+            $this->has_job = true;
+            $this->job['cladding_end_walls'] = ucwords(str_replace(',', ', ', str_replace(['[', '"', ']'], '',  $this->job['cladding_end_walls'])));
+            $this->job['wall_color']= json_decode($this->job['wall_color'])->name;
+
+        } else {
+            $this->job=null;
+            $this->has_job = false;
+        }
+
 
     }
 
@@ -72,17 +85,24 @@ class TakeOff extends Component
 
     public function updatedClientRef()
     {
+
         //TODO update this please later
 
         $result = json_decode(Http::acceptJson()->get('https://shedzone.net/api/jobs', ['client_ref' => $this->client_ref]));
-        dd($result);
-//        if (count($result) != 0) {
-//            $this->job = $result[0];
-//            $this->has_job = false;
-//        } else {
-//            $this->has_job = true;
-//        }
+
+        if (count($result) != 0) {
+            $this->job = (json_decode(json_encode($result[0]), true));
+            $this->has_job = true;
+            $this->emit('standard',$this->job);
+        } else {
+            $this->job=null;
+            $this->has_job = false;
+        }
+
     }
+
+
+
 
     public function render()
     {

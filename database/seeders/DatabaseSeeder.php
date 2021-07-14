@@ -20,5 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PartComponentSeeder::class);
         $this->call(PartSetSeeder::class);
         $this->call(PartSetOverrideSeeder::class);
+        $this->call(UserSeeder::class);
+        $this->call(ItemSeeder::class);
     }
 }

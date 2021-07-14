@@ -33381,6 +33381,14 @@ select {
   padding-right: 0.5rem !important;
 }
 
+.bg-my-grey {
+  background-color: #ececec !important;
+}
+
+.take-off-table tr{
+  border: 1px solid black !important;
+}
+
 @media (min-width: 640px) {
   .sm\:container {
     width: 100%;
@@ -195830,5 +195838,4 @@ select {
     --tw-backdrop-sepia: sepia(100%);
   }
 }
-
 

@@ -40,68 +40,86 @@
             <div class="ml-5">
                 <table class="w-full take-off-table">
                     <tbody>
-
-
-                    @if($job['floor_type']=="Concrete")
-                        <tr class="text-center">
-                            <td class="w-1/6">35100001</td>
-                            <td class="text-left">Reinf Mesh SE62 4.7Mx2.03M 7.61cvr [250lap]</td>
-                            <td class="w-1/6">SHT</td>
-                            <td class="w-1/6">{{ceil($shed_area/7.61)}}</td>
-                        </tr>
-                        <tr class="text-center">
-                            <td class="w-1/6">32500704</td>
-                            <td class="text-left">Sand No.3 Bulk</td>
-                            <td class="w-1/6">M3</td>
-                            {{--                        Shed Area * 25mm thickness + 10% wastage--}}
-                            <td class="w-1/6">{{number_format(round(($shed_area*.025)+(($shed_area*.025)*.1),2),3)}}</td>
-                        </tr>
-                        <tr class="text-center">
-                            <td class="w-1/6">32500164</td>
-                            <td class="text-left">GAP 65 Metal</td>
-                            <td class="w-1/6">M3</td>
-                            {{--                        Shed Area * 150mm thickness + 40% wastage--}}
-                            <td class="w-1/6">{{number_format(round(($shed_area*.15)+(($shed_area*.15)*.40),2),3)}}</td>
-                        </tr>
-                    @endif
-                    @foreach($concretes as $title=>$item)
-                        @foreach($item as $key=>$value)
+                    @foreach($foundations as $key=>$foundation)
+                        @if(isset($foundation['sku']))
                             <tr class="text-center">
-                                <td class=" w-1/6">{{$value['sku']}}</td>
-                                <td class="text-left">{{$key}} {{strtoupper($title)}}</td>
-                                <td class=" w-1/6">{{strtoupper($value['unit'])}}</td>
-                                <td class=" w-1/6">{{$value['qty']}}</td>
+                                <td class="w-1/6">{{$foundation['sku']}}</td>
+                                <td class="text-left">{{$key.' '.(isset($foundation['usage'])?strtoupper($foundation['usage']):'')}}</td>
+                                <td class="w-1/6">{{strtoupper($foundation['unit'])}}</td>
+                                <td class="w-1/6">{{$foundation['qty']}}</td>
                             </tr>
-                        @endforeach
+                        @else
+                            @foreach($foundation as $value)
+                                <tr class="text-center">
+                                    <td class="w-1/6">{{$value['sku']}}</td>
+                                    <td class="text-left">{{$key.' '.(isset($value['usage'])?strtoupper($value['usage']):'')}}</td>
+                                    <td class="w-1/6">{{strtoupper($value['unit'])}}</td>
+                                    <td class="w-1/6">{{$value['qty']}}</td>
+                                </tr>
+                            @endforeach
+                        @endif
                     @endforeach
-                    @if($job['floor_type']=="Concrete")
-                        <tr class="text-center">
-                            <td class="w-1/6">32706592 </td>
-                            <td class="text-left">Hurricane Reinforcing Bar Chair 50/65 ea SLAB</td>
-                            <td class="w-1/6">EACH</td>
-                            <td class="w-1/6">{{ceil($shed_area)}}</td>
-                        </tr>
-                        <tr class="text-center">
-                            <td class="w-1/6">34300832</td>
-                            <td class="text-left">3M Polythene Tape 48mmx30m 4810 SLAB</td>
-                            <td class="w-1/6">ROLL</td>
-                            <td class="w-1/6">{{$tape}}</td>
-                        </tr>
-                        <tr class="text-center">
-                            <td class="w-1/6">34303392 </td>
-                            <td class="text-left">Agpac Polythene Black 250 micron 4mx25m SLAB</td>
-                            <td class="w-1/6">ROLL</td>
-                            <td class="w-1/6">{{ceil(100/$shed_area)}}</td>
-                        </tr>
-                        <tr class="text-center">
-                            <td class="w-1/6">35006464 </td>
-                            <td class="text-left">Black Annealed Tie Wire 230mm 1 Kg Bndle</td>
-                            <td class="w-1/6">EACH</td>
-                            {{--                        From Qoutake : Area *.006--}}
-                            <td class="w-1/6">{{ceil($shed_area*.006)}}</td>
-                        </tr>
 
-                    @endif
+                    {{--                    @if($job['floor_type']=="Concrete")--}}
+                    {{--                        <tr class="text-center">--}}
+                    {{--                            <td class="w-1/6">35100001</td>--}}
+                    {{--                            <td class="text-left">Reinf Mesh SE62 4.7Mx2.03M 7.61cvr [250lap]</td>--}}
+                    {{--                            <td class="w-1/6">SHT</td>--}}
+                    {{--                            <td class="w-1/6">{{ceil($shed_area/7.61)}}</td>--}}
+                    {{--                        </tr>--}}
+                    {{--                        <tr class="text-center">--}}
+                    {{--                            <td class="w-1/6">32500704</td>--}}
+                    {{--                            <td class="text-left">Sand No.3 Bulk</td>--}}
+                    {{--                            <td class="w-1/6">M3</td>--}}
+                    {{--                            --}}{{--                        Shed Area * 25mm thickness + 10% wastage--}}
+                    {{--                            <td class="w-1/6">{{number_format(round(($shed_area*.025)+(($shed_area*.025)*.1),2),3)}}</td>--}}
+                    {{--                        </tr>--}}
+                    {{--                        <tr class="text-center">--}}
+                    {{--                            <td class="w-1/6">32500164</td>--}}
+                    {{--                            <td class="text-left">GAP 65 Metal</td>--}}
+                    {{--                            <td class="w-1/6">M3</td>--}}
+                    {{--                            --}}{{--                        Shed Area * 150mm thickness + 40% wastage--}}
+                    {{--                            <td class="w-1/6">{{number_format(round(($shed_area*.15)+(($shed_area*.15)*.40),2),3)}}</td>--}}
+                    {{--                        </tr>--}}
+                    {{--                    @endif--}}
+                    {{--                    @foreach($concretes as $title=>$item)--}}
+                    {{--                        @foreach($item as $key=>$value)--}}
+                    {{--                            <tr class="text-center">--}}
+                    {{--                                <td class=" w-1/6">{{$value['sku']}}</td>--}}
+                    {{--                                <td class="text-left">{{$key}} {{strtoupper($title)}}</td>--}}
+                    {{--                                <td class=" w-1/6">{{strtoupper($value['unit'])}}</td>--}}
+                    {{--                                <td class=" w-1/6">{{$value['qty']}}</td>--}}
+                    {{--                            </tr>--}}
+                    {{--                        @endforeach--}}
+                    {{--                    @endforeach--}}
+                    {{--                    @if($job['floor_type']=="Concrete")--}}
+                    {{--                        <tr class="text-center">--}}
+                    {{--                            <td class="w-1/6">32706592 </td>--}}
+                    {{--                            <td class="text-left">Hurricane Reinforcing Bar Chair 50/65 ea SLAB</td>--}}
+                    {{--                            <td class="w-1/6">EACH</td>--}}
+                    {{--                            <td class="w-1/6">{{ceil($shed_area)}}</td>--}}
+                    {{--                        </tr>--}}
+                    {{--                        <tr class="text-center">--}}
+                    {{--                            <td class="w-1/6">34300832</td>--}}
+                    {{--                            <td class="text-left">3M Polythene Tape 48mmx30m 4810 SLAB</td>--}}
+                    {{--                            <td class="w-1/6">ROLL</td>--}}
+                    {{--                            <td class="w-1/6">{{$tape}}</td>--}}
+                    {{--                        </tr>--}}
+                    {{--                        <tr class="text-center">--}}
+                    {{--                            <td class="w-1/6">34303392 </td>--}}
+                    {{--                            <td class="text-left">Agpac Polythene Black 250 micron 4mx25m SLAB</td>--}}
+                    {{--                            <td class="w-1/6">ROLL</td>--}}
+                    {{--                            <td class="w-1/6">{{ceil(100/$shed_area)}}</td>--}}
+                    {{--                        </tr>--}}
+                    {{--                        <tr class="text-center">--}}
+                    {{--                            <td class="w-1/6">35006464 </td>--}}
+                    {{--                            <td class="text-left">Black Annealed Tie Wire 230mm 1 Kg Bndle</td>--}}
+                    {{--                            <td class="w-1/6">EACH</td>--}}
+                    {{--                            --}}{{--                        From Qoutake : Area *.006--}}
+                    {{--                            <td class="w-1/6">{{ceil($shed_area*.006)}}</td>--}}
+                    {{--                        </tr>--}}
+
+                    {{--                    @endif--}}
                     </tbody>
                 </table>
             </div>
@@ -157,14 +175,24 @@
             <div class="ml-5">
                 <table class="w-full take-off-table">
                     <tbody>
-
-                    @foreach($fixings_fasteners as $key=>$value)
-                        <tr class="text-center">
-                            <td class=" w-1/6  ">{{$value['sku']}}</td>
-                            <td class="text-left">{{$key.' '.strtoupper($value['usage'])}}</td>
-                            <td class=" w-1/6">{{strtoupper($value['unit'])}}</td>
-                            <td class=" w-1/6">{{$value['qty']}}</td>
-                        </tr>
+                    @foreach($fixings_fasteners as $key=>$fixing)
+                        @if(isset($fixing['sku']))
+                            <tr class="text-center">
+                                <td class=" w-1/6  ">{{$fixing['sku']}}</td>
+                                <td class="text-left">{{$key.' '.strtoupper($fixing['usage'])}}</td>
+                                <td class=" w-1/6">{{strtoupper($fixing['unit'])}}</td>
+                                <td class=" w-1/6">{{$fixing['qty']}}</td>
+                            </tr>
+                        @else
+                            @foreach($fixing as $value)
+                                <tr class="text-center">
+                                    <td class=" w-1/6  ">{{$value['sku']}}</td>
+                                    <td class="text-left">{{$key.' '.strtoupper($value['usage'])}}</td>
+                                    <td class=" w-1/6">{{strtoupper($value['unit'])}}</td>
+                                    <td class=" w-1/6">{{$value['qty']}}</td>
+                                </tr>
+                            @endforeach
+                        @endif
                     @endforeach
                     @foreach($brace_with_tensioners as $key=>$value)
                         <tr class="text-center">
@@ -174,64 +202,14 @@
                             <td class=" w-1/6">{{$value['qty']}}</td>
                         </tr>
                     @endforeach
-{{--                    <tr class="text-center">--}}
-{{--                        <td class=" w-1/6  "></td>--}}
-{{--                        <td class="text-left">Bowmac Strap Rag B75 POSTS</td>--}}
-{{--                        <td class=" w-1/6">EACH</td>--}}
-{{--                        <td class=" w-1/6">{{$num_columns}}</td>--}}
-{{--                    </tr>--}}
-{{--                    <tr class="text-center">--}}
-{{--                        <td class=" w-1/6  "></td>--}}
-{{--                        <td class="text-left">Tylok Nail Plate 68x120mm 4T10 PURLINS</td>--}}
-{{--                        <td class=" w-1/6">EACH</td>--}}
-{{--                        --}}{{--5 percent waste--}}
-{{--                        <td class=" w-1/6">{{ceil(($bays*4) + ($bays*4) * 0.05)}}</td>--}}
-{{--                    </tr>--}}
-{{--                    <tr class="text-center">--}}
-{{--                        <td class=" w-1/6  "></td>--}}
-{{--                        <td class="text-left">L/Lok Girt Plate Galv COLUMN</td>--}}
-{{--                        <td class=" w-1/6">EACH</td>--}}
-{{--                        --}}{{--5 percent waste--}}
-{{--                        <td class=" w-1/6">{{ceil(((($num_girts+$num_purlins_per_bay)*2)+$num_columns) + ((($num_girts+$num_purlins_per_bay)*2)+$num_columns) * 0.05)}}</td>--}}
-{{--                    </tr>--}}
-{{--                    <tr class="text-center">--}}
-{{--                        <td class=" w-1/6  "></td>--}}
-{{--                        <td class="text-left">Type 17 Screw 14g x 35mm COLUMN</td>--}}
-{{--                        <td class=" w-1/6">EACH</td>--}}
-{{--                        --}}{{--5 percent waste--}}
-{{--                        <td class=" w-1/6">{{ceil((((($num_girts+$num_purlins_per_bay)*2)+$num_columns) *6) + (((($num_girts+$num_purlins_per_bay)*2)+$num_columns)*6) * 0.05)}}</td>--}}
-{{--                    </tr>--}}
-{{--                    <tr class="text-center">--}}
-{{--                        <td class=" w-1/6  "></td>--}}
-{{--                        --}}{{--                    Joist Hanger depends on the purlin size--}}
-{{--                        <td class="text-left">L/lok Joist Hanger Pre-galv 47x120mm PURLINS</td>--}}
-{{--                        <td class=" w-1/6">EACH</td>--}}
-{{--                        --}}{{--5 percent waste--}}
-{{--                        <td class=" w-1/6">{{ceil(((($num_purlins_per_bay-2)*$bays)*2) + ((($num_purlins_per_bay-2)*$bays)*2)* 0.05)}}</td>--}}
-{{--                    </tr>--}}
-{{--                    <tr class="text-center">--}}
-{{--                        <td class=" w-1/6  "></td>--}}
-{{--                        <td class="text-left">L/lok Concealed Purlin Cleat CPC80 PURLINS</td>--}}
-{{--                        <td class=" w-1/6">EACH</td>--}}
-{{--                        --}}{{--5 percent waste--}}
-{{--                        <td class=" w-1/6">{{$bays*2}}</td>--}}
-{{--                    </tr>--}}
-{{--                    @foreach($brace_with_tensioners as $key=>$value)--}}
-{{--                        <tr class="text-center">--}}
-{{--                            <td class=" w-1/6  "></td>--}}
-{{--                            <td class="text-left">{{$key}}</td>--}}
-{{--                            <td class=" w-1/6">{{strtoupper($value['unit'])}}</td>--}}
-{{--                            <td class=" w-1/6">{{$value['qty']}}</td>--}}
-{{--                        </tr>--}}
-{{--                    @endforeach--}}
-{{--                    @foreach($bolts_and_washers as $key=>$value)--}}
-{{--                        <tr class="text-center">--}}
-{{--                            <td class=" w-1/6  "></td>--}}
-{{--                            <td class="text-left">{{$key}}</td>--}}
-{{--                            <td class=" w-1/6">EACH</td>--}}
-{{--                            <td class=" w-1/6">{{$value}}</td>--}}
-{{--                        </tr>--}}
-{{--                    @endforeach--}}
+                    @foreach($bolts_and_washers as $key=>$value)
+                        <tr class="text-center">
+                            <td class=" w-1/6  ">{{$value['sku']}}</td>
+                            <td class="text-left">{{$key.' '.strtoupper($value['usage'])}}</td>
+                            <td class=" w-1/6">{{strtoupper($value['unit'])}}</td>
+                            <td class=" w-1/6">{{$value['qty']}}</td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
             </div>
@@ -241,65 +219,31 @@
             <div class="ml-5">
                 <table class="w-full take-off-table">
                     <tbody>
-                    @foreach($doors as $key=>$value)
+                    @foreach($claddings  as $key=>$value)
                         <tr class="text-center">
-                            <td class=" w-1/6  "></td>
+                            <td class=" w-1/6  ">{{$value['sku']}}</td>
                             <td class="text-left">{{$key}}</td>
                             <td class=" w-1/6">{{strtoupper($value['unit'])}}</td>
                             <td class=" w-1/6">{{$value['qty']}}</td>
                         </tr>
                     @endforeach
-                    @foreach($overhang_cladding as $key=>$value)
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="mt-3">
+            <div class="bg-my-grey font-bold px-2">RAINWATER SYSTEM</div>
+            <div class="ml-5">
+                <table class="w-full take-off-table">
+                    <tbody>
+                    @foreach($rainwater_systems  as $key=>$value)
                         <tr class="text-center">
-                            <td class=" w-1/6  "></td>
+                            <td class=" w-1/6  ">{{$value['sku']}}</td>
                             <td class="text-left">{{$key}}</td>
                             <td class=" w-1/6">{{strtoupper($value['unit'])}}</td>
                             <td class=" w-1/6">{{$value['qty']}}</td>
                         </tr>
                     @endforeach
-                    <tr class="text-center">
-                        <td class=" w-1/6  "></td>
-                        <td class="text-left">Impulse Nail & Fuel; Pk 75 ZB20547V</td>
-                        <td class=" w-1/6">EACH</td>
-                        <td class=" w-1/6">1</td>
-                    </tr>
-                    <tr class="text-center">
-                        <td class=" w-1/6  "></td>
-                        <td class="text-left">Bostik Fill-A-Gap Gap Filler</td>
-                        <td class=" w-1/6">EACH</td>
-                        <td class=" w-1/6">1</td>
-                    </tr>
-                    <tr class="text-center">
-                        <td class=" w-1/6  "></td>
-                        <td class="text-left">Nail Galv FH Hardiflex 40x2.80mm 500g</td>
-                        <td class=" w-1/6">BAG</td>
-                        <td class=" w-1/6">1</td>
-                    </tr>
-                    <tr class="text-center">
-                        <td class=" w-1/6  "></td>
-                        <td class="text-left">Nail Galv Steel Jolt Hd 75x3.15mm 500g FASCIA</td>
-                        <td class=" w-1/6">BAG</td>
-                        <td class=" w-1/6">1</td>
-                    </tr>
-                    <tr class="text-center">
-                        <td class=" w-1/6  "></td>
-                        <td class="text-left">Thermakraft Aluband Window Sealing Tape 200mmx25m ALU200025 OPENINGS</td>
-                        <td class=" w-1/6">ROLL</td>
-                        <td class=" w-1/6">1</td>
-                    </tr>
-                    <tr class="text-center">
-                        <td class=" w-1/6  "></td>
-                        <td class="text-left">Thermakraft Aluband Window Sealing Tape 75mmx25m ALU075025 OPENINGS</td>
-                        <td class=" w-1/6">ROLL</td>
-                        <td class=" w-1/6">1</td>
-                    </tr>
-                    <tr class="text-center">
-                        <td class=" w-1/6  "></td>
-                        <td class="text-left">504 Holdfast GORILLA Foam 400ml OPENINGS</td>
-                        <td class=" w-1/6">ROLL</td>
-                        <td class=" w-1/6">1</td>
-                    </tr>
-
                     </tbody>
                 </table>
             </div>

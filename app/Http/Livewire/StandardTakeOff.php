@@ -122,6 +122,11 @@ class StandardTakeOff extends Component
             $foundations ['Agpac Polythene Black 250 micron  4mx25m'] = ['sku' => '', 'usage' => 'slab', 'unit' => 'roll', 'qty' => ceil(100 / $this->shed_area)];
             //From Qoutake : Area *.006
             $foundations ['Black Annealed Tie Wire 230mm 1 Kg Bndle'] = ['sku' => '', 'usage' => '', 'unit' => 'each', 'qty' => ceil($this->shed_area * .006)];
+
+            $perimeter = (($this->bay_spacing * $this->bays) + $this->building_depth) * 2;
+            $foundations ['Steel Reinforcg Deformed Rnd Bar 10mmx6m'] = ['sku' => '35001216', 'usage' => 'starters', 'unit' => 'lght', 'qty' => ceil(($perimeter * 2) / 6)];
+            $foundations ['Steel Reinforcg Deformed Rnd Bar 12mmx6m'] = ['sku' => '35001280', 'usage' => 'footings', 'unit' => 'lght', 'qty' => ceil(($perimeter / 0.6) / 6)];
+
         }
 
         //wastage 10%
@@ -180,11 +185,12 @@ class StandardTakeOff extends Component
 
         foreach ($roller_doors as $key => $roller_door) {
             if (is_array($roller_door)) {
-                $roller_doors[$key] = ['sku' => '999999', 'unit' => 'EACH', 'qty' => array_sum($roller_door)];
+                $roller_doors[$key] = ['sku' => 'DOWD3330CS', 'unit' => 'EACH', 'qty' => array_sum($roller_door)];
             } else {
-                $roller_doors[$key] = ['sku' => '999999', 'unit' => 'EACH', 'qty' => $roller_door];
+                $roller_doors[$key] = ['sku' => 'DOWD3330CS', 'unit' => 'EACH', 'qty' => $roller_door];
             }
         }
+
 
         $pa_door = [];
         if ($job['pa_door'] != 'none') {
@@ -192,7 +198,10 @@ class StandardTakeOff extends Component
             $opening_height += 2.1;
             $opening_width += 0.81;
             $opening_area += 2.1 * 0.81;
-            $pa_door = ['PA Door 2.1h x 0.81w' => ['sku' => '999999', 'unit' => 'EACH', 'qty' => 1]];
+            $pa_door = ['Hume Solicore Duracote Door 1980 x 810 x 40' => ['sku' => 'DOHDC19810', 'unit' => 'EACH', 'qty' => 1]];
+            $pa_door = ['200x25 mm Rad No1 H3.2 PG' => ['sku' => '', 'unit' => 'mtr', 'qty' => ((2.1 * 4) + (0.81 * 4))]];
+
+
         }
         $doors = array_merge($roller_doors, $roller_door_opener, $pa_door);
 
@@ -239,6 +248,9 @@ class StandardTakeOff extends Component
             $sheets ['Hardiflex Flat Sheet 4.5x2400x 900mm'] = ['sku' => '', 'usage' => 'soffit', 'unit' => 'sht', 'qty' => $sheet_qty];
             $sheets ['Impulse Nail & Fuel; Pk 75 ZB20547V'] = ['sku' => '', 'usage' => '', 'unit' => 'each', 'qty' => ceil($soffit_area * 10 * 0.000350)];
             $sheets ['Nail Galv FH Hardiflex 40x2.80mm 500g'] = ['sku' => '', 'usage' => '', 'unit' => 'bag', 'qty' => $this->bays * 2];
+            if ($sheet_qty > 1) {
+                $sheets ['Hardijointer          PVC       5x2400mm'] = ['sku' => '', 'usage' => '', 'unit' => 'bag', 'qty' => $sheet_qty - 1];
+            }
         }
 
         $claddings = array_merge_recursive($doors, $tapes, $roofs, $walls, $flashings, $sheets, $sealants);
@@ -254,7 +266,7 @@ class StandardTakeOff extends Component
                     }
                 }
             }
-            $claddings[$key]['sku'] = $item != null ? $item->sku : '999999';
+            $claddings[$key]['sku'] = $item != null ? $item->sku : ($claddings[$key]['sku'] != '' ? $claddings[$key]['sku'] : '999999');
             $claddings[$key]['unit'] = $item != null ? $item->unit : $claddings[$key]['unit'];
         }
         return $claddings;
@@ -771,7 +783,8 @@ class StandardTakeOff extends Component
         return $poles;
     }
 
-    public function pole_depth(){
+    public function pole_depth()
+    {
         //FOOTING DEPTH
         $footing_depths = [];
         $avg_pole_height = 4.45;
@@ -779,47 +792,47 @@ class StandardTakeOff extends Component
 
         for ($i = 1.2; $i < 1.9; $i += 0.1) {
             $hu = 9 * 52 * 0.6 * (sqrt(2 * (($avg_pole_height + $i) ** 2 + ($avg_pole_height + 0.6) ** 2)) - ($i + 2 * $avg_pole_height + 0.6));
-            $footing_depths["'" . round($hu / $clear_span_shared_load, 3) . "'"] = ['check'=>round($hu / $clear_span_shared_load, 3),'depth' => $i, 'dia' => 0.6, 'su' => 65, 'phi' => 0.8, 'fsu' => 52, 'fo' => 0.6, 'hu' => $hu, 'load' => $clear_span_shared_load];
+            $footing_depths["'" . round($hu / $clear_span_shared_load, 3) . "'"] = ['check' => round($hu / $clear_span_shared_load, 3), 'depth' => $i, 'dia' => 0.6, 'su' => 65, 'phi' => 0.8, 'fsu' => 52, 'fo' => 0.6, 'hu' => $hu, 'load' => $clear_span_shared_load];
         }
 
         $footing_uplifts = [];
         $conc_weight = 22;
 
-        for ($i = 120; $i < 190; $i +=10) {
-            $total_vol = round(0.6 ** 2 * PI() / 4 * $i/100, 3);
-            $pole_vol = round($i/100 * $this->pole_size ** 2 * PI() / 4, 3);
+        for ($i = 120; $i < 190; $i += 10) {
+            $total_vol = round(0.6 ** 2 * PI() / 4 * $i / 100, 3);
+            $pole_vol = round($i / 100 * $this->pole_size ** 2 * PI() / 4, 3);
             $nett_conc = $total_vol - $pole_vol;
             $kN = $nett_conc * $conc_weight;
-            $area = round(0.6 * PI() * ($i/100 - 0.6), 3);
-            if($i/100<=1.3){
+            $area = round(0.6 * PI() * ($i / 100 - 0.6), 3);
+            if ($i / 100 <= 1.3) {
                 $kPa = 5;
-            }elseif ($i/100==1.4){
+            } elseif ($i / 100 == 1.4) {
                 $kPa = 6;
-            }elseif ($i/100==1.5){
+            } elseif ($i / 100 == 1.5) {
                 $kPa = 7;
-            }elseif ($i/100==1.6){
+            } elseif ($i / 100 == 1.6) {
                 $kPa = 7.5;
-            }elseif ($i/100==1.7){
+            } elseif ($i / 100 == 1.7) {
                 $kPa = 8;
-            }elseif ($i/100==1.8){
+            } elseif ($i / 100 == 1.8) {
                 $kPa = 10;
             }
-            $friction = $area*$kPa;
-            $total_kN = $kN+$friction;
-            $footing_uplifts ["'".round($total_kN,3)."'"] = ['check'=>round($total_kN,3),'depth'=>$i/100,'total_vol'=>$total_vol,'pole_vol'=>$pole_vol,'nett_conc'=>$nett_conc,'kN'=>$kN,'area'=>$area,'kPa'=>$kPa,'friction'=>$friction,'total_kN'=>$total_kN];
+            $friction = $area * $kPa;
+            $total_kN = $kN + $friction;
+            $footing_uplifts ["'" . round($total_kN, 3) . "'"] = ['check' => round($total_kN, 3), 'depth' => $i / 100, 'total_vol' => $total_vol, 'pole_vol' => $pole_vol, 'nett_conc' => $nett_conc, 'kN' => $kN, 'area' => $area, 'kPa' => $kPa, 'friction' => $friction, 'total_kN' => $total_kN];
         }
 
         //TODO Capacity Ratio is fixed on the engineering sheet but need to be dynamic later on
         $capacity_ratio = 1.013;
-        $uplift_reaction = $this->wu * ($this->building_depth/2);
+        $uplift_reaction = $this->wu * ($this->building_depth / 2);
         $for_uplift = 0;
-        foreach ($footing_uplifts as $uplifts){
-            if($uplifts['check']>$uplift_reaction){
+        foreach ($footing_uplifts as $uplifts) {
+            if ($uplifts['check'] > $uplift_reaction) {
                 $for_uplift = $uplifts['check'];
                 break;
             }
         }
-        return ((max($footing_depths["'".'1.013'."'"]['depth'],$footing_uplifts["'".$for_uplift."'"]['depth'])));
+        return ((max($footing_depths["'" . '1.013' . "'"]['depth'], $footing_uplifts["'" . $for_uplift . "'"]['depth'])));
 
     }
 
@@ -1069,7 +1082,7 @@ class StandardTakeOff extends Component
 //      Columns Qty
         if ($with_side_column) {
             $door_column = $job['pa_door'] != 'none' ? 2 : 0;
-            $side_a = [$wind_column_b['width'] . 'x' . $wind_column_b['thickness'] . ' mm ' . $wind_column_b['description'] . ' ' . $this->get_material_length(($this->center_pole_length -$this->pole_depth) + ($this->front_height - ($this->center_pole_length -$this->pole_depth)) / 2) => 4 + $facade_column + $door_column];
+            $side_a = [$wind_column_b['width'] . 'x' . $wind_column_b['thickness'] . ' mm ' . $wind_column_b['description'] . ' ' . $this->get_material_length(($this->center_pole_length - $this->pole_depth) + ($this->front_height - ($this->center_pole_length - $this->pole_depth)) / 2) => 4 + $facade_column + $door_column];
             if ($this->with_center_pole) {
                 $side_b = [$wind_column_b['width'] . 'x' . $wind_column_b['thickness'] . ' mm ' . $wind_column_b['description'] . ' ' . $this->get_material_length(($this->center_pole_length - $this->pole_depth) - ($this->front_height - ($this->center_pole_length - $this->pole_depth)) / 2) => 4];
             } else {
@@ -1077,8 +1090,8 @@ class StandardTakeOff extends Component
             }
         } else {
             $door_column = $job['pa_door'] != 'none' ? 4 : 0;
-            $side_a = [$wind_column_b['width'] . 'x' . $wind_column_b['thickness'] . ' mm ' . $wind_column_b['description'] . ' ' . $this->get_material_length(($this->center_pole_length -$this->pole_depth)) => 2 + $facade_column + $door_column];
-            $side_b = [$wind_column_b['width'] . 'x' . $wind_column_b['thickness'] . ' mm ' . $wind_column_b['description'] . ' ' . $this->get_material_length(($this->center_pole_length -$this->pole_depth)) => 0];
+            $side_a = [$wind_column_b['width'] . 'x' . $wind_column_b['thickness'] . ' mm ' . $wind_column_b['description'] . ' ' . $this->get_material_length(($this->center_pole_length - $this->pole_depth)) => 2 + $facade_column + $door_column];
+            $side_b = [$wind_column_b['width'] . 'x' . $wind_column_b['thickness'] . ' mm ' . $wind_column_b['description'] . ' ' . $this->get_material_length(($this->center_pole_length - $this->pole_depth)) => 0];
         }
 
 

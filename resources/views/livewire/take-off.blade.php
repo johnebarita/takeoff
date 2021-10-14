@@ -44,39 +44,54 @@
                             </div>
                             <div class="w-full">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Date</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="date" value=""/>
+                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="date"
+                                             value="{{($job? \Carbon\Carbon::createFromFormat('Y-m-d H:i:s',$job['created_at'])->format('Y-m-d'):'')}}"/>
                             </div>
                         </div>
                         <div class="mt-2 w-full">
                             <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Job Name</x-jet-label>
                             <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}}  disabled:opacity-50" type="text"
+                                         wire:model="job.job_name"
                                          value="{{ucwords($job? $job['job_name']:'')}}"/>
+{{--                            value="{{($job? \Carbon\Carbon::createFromFormat('Y-m-d H:i:s',$job['created_at'])->format('d/m/Y'):'')}}"/>--}}
                         </div>
                         <div class="mt-2 w-full">
                             <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Job Site</x-jet-label>
                             <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
+                                         wire:model="job.job_site"
                                          value="{{ucwords($job? $job['job_site']:'')}}"/>
                         </div>
-                        <div class="mt-2 flex space-x-4">
-                            <div>
-                                <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Earthquake Zone</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{($job? $job['earthquake_zone']:'')}} "/>
+                        <div class="mt-2 flex space-x-4 w-full">
+                            <div class="w-1/4">
+                                <x-jet-label class="font-bold {{!$job?'opacity-50':''}} w-full">Earthquake Zone</x-jet-label>
+                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.earthquake_zone">
+                                    @foreach(range(1,4) as $num)
+                                        <option value="{{$num}}">{{$num}}</option>
+                                    @endforeach
+                                </x-input.select>
                             </div>
-                            <div>
+                            <div class="w-1/4">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Snow Loading</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{ucwords($job? $job['snow_load']:'')}}"/>
+                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.snow_load">
+                                    @foreach($snow_load as $key=>$value)
+                                        <option value="{{$key}}">{{$key}}</option>
+                                    @endforeach
+                                </x-input.select>
                             </div>
-                            <div>
+                            <div class="w-1/4">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Wind Zone</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{ucwords($job? $job['wind_load']:'')}}"/>
+                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.wind_load">
+                                    @foreach($wind_zone as $key=>$value)
+                                        <option value="{{$key}}">{{$key}}</option>
+                                    @endforeach
+                                </x-input.select>
                             </div>
-                            <div>
+                            <div class="w-1/4">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Sea Spray Zone</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{ucwords($job? $job['sea_spray_zone']:'')}}"/>
+                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.sea_spray_zone">
+                                    <option value="no">No</option>
+                                    <option value="yes">Yes</option>
+                                </x-input.select>
                             </div>
                         </div>
                     </div>
@@ -118,13 +133,21 @@
                         <div class="flex justify-between space-x-4">
                             <div class="w-full">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Building Type</x-jet-label>
+{{--                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.wind_load">--}}
+{{--                                    @foreach($wind_zone as $key=>$value)--}}
+{{--                                        <option value="{{$key}}">{{$key}}</option>--}}
+{{--                                    @endforeach--}}
+{{--                                </x-input.select>--}}
                                 <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
                                              value="{{ucwords($job? $job['building_type']:'')}}"/>
                             </div>
                             <div class="w-full">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Number Of Bays</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{str_replace('bay','',$job? $job['num_bay']:'')}}"/>
+                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.num_bay">
+                                    @foreach(range(1,6) as $num)
+                                        <option value="{{$num}}">{{$num}}</option>
+                                    @endforeach
+                                </x-input.select>
                             </div>
                         </div>
                         <div class="mt-2 w-full">
@@ -148,17 +171,17 @@
                         <div class="mt-2 flex space-x-4">
                             <div>
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Building Depth</x-jet-label>
-                                <x-jet-input wire:model="job.building_depth" class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
+                                <x-jet-input wire:model="job.building_depth" class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="number" wire:model="job.building_depth"
                                              value="{{($job? $job['building_depth']:'')}}"/>
                             </div>
                             <div>
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Front Height</x-jet-label>
-                                <x-jet-input wire:model="job.front_height" class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
+                                <x-jet-input wire:model="job.front_height" class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="number" wire:model="job.front_height"
                                              value="{{($job? $job['front_height']:'')}}"/>
                             </div>
                             <div>
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Rear Height</x-jet-label>
-                                <x-jet-input wire:model="job.rear_height" class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
+                                <x-jet-input wire:model="job.rear_height" class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="number" wire:model="job.rear_height"
                                              value="{{($job? $job['rear_height']:'')}}"/>
                             </div>
 
@@ -166,58 +189,73 @@
                     </div>
                     <div class="w-3/5">
                         <div class="flex space-x-4">
-                            <div>
+                            <div class="w-1/4">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Apex Height</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
+                                <x-jet-input disabled="{{$job['building_type']=='Mono Pitch'?'true':'false'}}" class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
                                              value="{{($job? $job['apex_height']:'')}}"/>
                             </div>
-                            <div>
+                            <div class="w-1/4">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Bay Spacing</x-jet-label>
-                                <x-jet-input  wire:model="job.bay_spacing " class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
+                                <x-jet-input  wire:model="job.bay_spacing " class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text" wire:model="job.bay_spacing"
                                              value="{{($job? $job['bay_spacing']:'')}}"/>
                             </div>
-                            <div>
+                            <div class="w-1/4">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Wind Column/Pole</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{ucwords($job? $job['wind_column_pole']:'')}}"/>
+                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.wind_column_pole">
+                                        <option value="Column">Column</option>
+                                        <option value="Pole">Pole</option>
+                                </x-input.select>
                             </div>
-                            <div>
+                            <div class="w-1/4">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Floor Type</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{ucwords($job? $job['floor_type']:'')}}"/>
+                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.floor_type">
+                                    <option value="Earth">Earth</option>
+                                    <option value="Concrete">Concrete</option>
+                                </x-input.select>
                             </div>
                         </div>
                         <div class="mt-2 flex space-x-4">
-                            <div>
+                            <div class="w-1/4">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Roof Cladding</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{ucwords($job? $job['roof_cladding']:'')}}"/>
+                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.roof_cladding">
+                                    <option value="Corrugated">Corrugated</option>
+                                    <option value="Trapezoidal">Trapezoidal</option>
+                                </x-input.select>
                             </div>
-                            <div>
+                            <div class="w-1/4">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Wall Cladding</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{ucwords($job? $job['wall_cladding']:'')}}"/>
+                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.wall_cladding">
+                                    <option value="Corrugated">Corrugated</option>
+                                    <option value="Trapezoidal">Trapezoidal</option>
+                                </x-input.select>
                             </div>
-                            <div>
+                            <div class="w-1/4">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Color</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{ucwords($job? $job['wall_color']:'')}}"/>
+                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.wall_color">
+                                    @foreach($cladding_colors as $colors)
+                                       <option value="{{$colors}}">{{$colors}}</option>
+                                    @endforeach
+                                </x-input.select>
                             </div>
-                            <div>
+                            <div class="w-1/4">
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Roofing Pitch</x-jet-label>
                                 <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{($job? $job['roof_pitch']:'')}}"/>
+                                    value="{{($job? $job['roof_pitch']:'')}}">
+                                </x-jet-input>
                             </div>
                         </div>
                         <div class="mt-2 flex space-x-4">
                             <div>
                                 <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">PA Door</x-jet-label>
-                                <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
-                                             value="{{ucwords($job? $job['pa_door']:'')}}"/>
+                                <x-input.select class="mt-1 w-full  {{ !$job?'opacity-50':''}}" wire:model="job.pa_door">
+                                    <option value="none">None</option>
+                                    <option value="RH End Wall Front">RH End Wall Front</option>
+                                    <option value="LH End Wall Front">LH End Wall Front</option>
+                                </x-input.select>
+
                             </div>
                             <div>
-                                <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Cladding On End Walls
-                                </x-jet-label>
+                                <x-jet-label class="font-bold {{!$job?'opacity-50':''}}">Cladding On End Walls</x-jet-label>
                                 <x-jet-input class="mt-1 w-full {{ !$job?'opacity-50':''}} " type="text"
                                              value="{{($job? $job['cladding_end_walls']:'')}}"/>
                             </div>

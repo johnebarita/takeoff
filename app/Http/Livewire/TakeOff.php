@@ -25,13 +25,19 @@ class TakeOff extends Component
     public $client_ref = 'NE-00138';
     public $has_job = true;
     public $job = [];
-
+    public $wind_zone;
+    public $snow_load;
+    public $cladding_colors;
     protected $rules = [
         'client_ref' => 'required',
     ];
 
     public function mount()
     {
+        $this->wind_zone = ['High Wind' => 1.05, 'Very High Wind' => 1.38, 'Extra High Wind' => 1.69];
+        $this->snow_load = ['Nil Snow' => 0.0, '0.9 kPa' => 1.1, '1.35 kPa' => 1.5, '1.8 kPa' => 1.8];
+        $this->cladding_colors = ['Sandstone Grey','Ebony','Ironsand','Grey Friars','New Denim Blue','Mist Green'];
+
 
         $this->structures = ShedStructure::with('parts.components.usage')->get();
         $this->usages = PartUsage::all();

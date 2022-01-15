@@ -33382,11 +33382,23 @@ select {
 }
 
 .bg-my-grey {
-  background-color: #ececec !important;
+  background-color: #DCDCDC !important;
 }
 
 .take-off-table tr{
   border: 1px solid black !important;
+}
+
+.carters-green{
+  background-color:#005443 !important;
+}
+
+.carters-red{
+  color:#ee3124;
+}
+
+.carters-red-bg{
+  background-color:#ee3124;
 }
 
 @media (min-width: 640px) {

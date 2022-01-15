@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Livewire\TakeOff;
+use App\Http\Livewire\JobDetails;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,7 +20,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
-    Route::get('/take-off/', TakeOff::class)->name('take-off');
+    Route::get('/take-off/', JobDetails::class)->name('take-off');
 
     Route::get('/dashboard', function () {
         return redirect('take-off');

@@ -10,7 +10,7 @@ use http\Client;
 use Livewire\Component;
 use Illuminate\Support\Facades\Http;
 
-class TakeOff extends Component
+class JobDetails extends Component
 {
     public $structures;
     public $selected_structure;
@@ -22,12 +22,13 @@ class TakeOff extends Component
     public $usages;
     public $sets;
     public $set_overrides;
-    public $client_ref = 'NE-00138';
+    public $client_ref = 'WC-00163';
     public $has_job = true;
     public $job = [];
     public $wind_zone;
     public $snow_load;
     public $cladding_colors;
+
     protected $rules = [
         'client_ref' => 'required',
     ];
@@ -58,12 +59,12 @@ class TakeOff extends Component
             $this->has_job = true;
             $this->job['cladding_end_walls'] = ucwords(str_replace(',', ', ', str_replace(['[', '"', ']'], '',  $this->job['cladding_end_walls'])));
             $this->job['wall_color']= json_decode($this->job['wall_color'])->name;
+            $this->job['num_bay'] = (str_replace('bay', '', $this->job['num_bay']) + 0);
 
         } else {
             $this->job=null;
             $this->has_job = false;
         }
-
 
     }
 
@@ -109,9 +110,8 @@ class TakeOff extends Component
 
 
 
-
     public function render()
     {
-        return view('livewire.take-off');
+        return view('livewire.job-details');
     }
 }

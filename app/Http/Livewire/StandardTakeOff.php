@@ -3,7 +3,10 @@
 namespace App\Http\Livewire;
 
 use App\Models\Item;
+use App\Models\Takeoff;
 use App\Models\User;
+use Carbon\Carbon;
+use PDF;
 use Illuminate\Support\Facades\Http;
 use Livewire\Component;
 use NunoMaduro\Collision\Provider;
@@ -31,7 +34,6 @@ class StandardTakeOff extends Component
     public $purlin_member;
     public $num_columns;
     public $num_girts;
-    public $num_rafters;
     public $num_props;
     public $internal_rafter_member;
     public $external_rafter_member;
@@ -42,23 +44,12 @@ class StandardTakeOff extends Component
     public $wu;
     public $pole_depth;
 
-    public $concretes;
-    public $poles;
-    public $rafters;
-    public $purlins;
-    public $girts_and_columns;
-    public $tape;
-    public $brace_with_tensioners;
-    public $bolts_and_washers;
-    public $doors;
-    public $overhang_cladding;
-    public $fixings_fasteners;
-
     public $foundations;
     public $ext_framings;
     public $framing_hardwares;
     public $claddings;
     public $rainwater_systems;
+    public $takeoff;
 
     public function mount()
     {
@@ -66,6 +57,7 @@ class StandardTakeOff extends Component
 
     public function handleJob($job)
     {
+
 
         $this->job = $job;
         $this->wind_zone = ['High Wind' => 1.05, 'Very High Wind' => 1.38, 'Extra High Wind' => 1.69];
@@ -78,54 +70,54 @@ class StandardTakeOff extends Component
         $this->front_height = $this->job['front_height'] / 1000;
         $this->rear_height = $this->job['rear_height'] / 1000;
 
-        $this->shed_area = $this->shed_area = $this->bays * $this->bay_spacing * $this->building_depth;
+        $this->shed_area = $this->bays * $this->bay_spacing * $this->building_depth;
         foreach (json_decode($this->job['bay_facades']) as $facade) {
             if ($facade->type != "Fully Open") {
                 $this->is_fully_open = false;
             }
         }
 
-
         $this->wind_pressure = round(((41 * 41) / (45 * 45)) * $this->wind_zone[$this->job['wind_load']], 2);
-        $this->rafters = $this->rafters($this->job);
         $this->pole_depth = $this->pole_depth();
-        $this->poles = $this->poles($this->job);
-        $this->purlins = $this->purlins($this->job);
-        $this->girts_and_columns = $this->girts_and_columns($this->job);
-        $this->tape = $this->tape($this->job);
-        $this->concretes = $this->concretes($this->job);
-        $this->brace_with_tensioners = $this->brace_with_tensioners($this->job);
-        $this->fixings_fasteners = $this->fixings_fasteners($this->job);
-        $this->bolts_and_washers = $this->bolts_and_washers($this->job);
-        $this->doors = $this->doors($this->job);
-        $this->overhang_cladding = $this->overhang_cladding($this->job);
-        $this->foundations = $this->foundations($this->job);
+
+
         $this->ext_framings = $this->ext_framings($this->job);
+        $this->foundations = $this->foundations($this->job);
+        $this->framing_hardwares = $this->framing_hardwares($this->job);
         $this->claddings = $this->claddings($this->job);
         $this->rainwater_systems = $this->rainwater_systems($this->job);
+        $this->takeoff = $this->temp_takeoff();
     }
 
     public function foundations($job)
     {
         if ($job['floor_type'] == "Concrete") {
+            $gap_thickness = 0.350;
+            $foundations ['Agpac Polythene Black 250 micron  4mx25m'] = ['sku' => '', 'usage' => 'slab', 'unit' => 'roll', 'qty' =>$this->with_wastage($this->shed_area*0.01,0.15)];
+            $foundations ['GAP 65 Metal @350mm'] = ['sku' => '', 'usage' => '', 'unit' => 'm3', 'qty' => number_format(round($this->with_wastage($this->shed_area * $gap_thickness, 0.4, false), 2), 3)];
+
+            //wastage 10%
+            $foundations ['Sand                         No.3   Bulk'] = ['sku' => '', 'usage' => '', 'unit' => 'm3', 'qty' => number_format(round($this->with_wastage($this->shed_area * .025, 0.1, false), 2), 3)];
+
             //wastage 5%
             $slab = round($this->with_wastage($this->shed_area * .1, 0.05, false), 2);
             $foundations ['Structural Concrete 17.5MPa 19mm']['slab'] = ['sku' => '', 'usage' => 'slab', 'unit' => 'm3', 'qty' => $slab];
 
-            $foundations ['Reinf Mesh SE62 4.7Mx2.03M 7.61cvr [250lap]'] = ['sku' => '', 'usage' => '', 'unit' => 'sht', 'qty' => ceil($this->shed_area / 7.61)];
             //wastage 10%
-            $foundations ['Sand                         No.3   Bulk'] = ['sku' => '', 'usage' => '', 'unit' => 'm3', 'qty' => number_format(round($this->with_wastage($this->shed_area * .025, 0.1, false), 2), 3)];
-            //wastage 10%
-            $foundations ['GAP 65 Metal'] = ['sku' => '', 'usage' => '', 'unit' => 'm3', 'qty' => number_format(round($this->with_wastage($this->shed_area * .25, 0.1, false), 2), 3)];
             $foundations ['Hurricane Reinforcing Bar Chair 50/65 ea'] = ['sku' => '', 'usage' => 'slab', 'unit' => 'each', 'qty' => ceil($this->shed_area)];
-            $foundations ['3M Polythene Tape         48mmx30m  4810'] = ['sku' => '', 'usage' => 'slab', 'unit' => 'roll', 'qty' => $this->tape()];
-            $foundations ['Agpac Polythene Black 250 micron  4mx25m'] = ['sku' => '', 'usage' => 'slab', 'unit' => 'roll', 'qty' => ceil(100 / $this->shed_area)];
+
+            $foundations ['3M Polythene Tape         48mmx30m  4810'] = ['sku' => '', 'usage' => 'slab', 'unit' => 'roll', 'qty' => $this->with_wastage($this->shed_area*0.017,0.05)];
+
+            $perimeter = (($this->bay_spacing * $this->bays) + $this->building_depth) * 2;
+
+            $foundations ['Steel Reinforcg Deformed Rnd Bar 12mmx6m'] = ['sku' => '', 'usage' => 'footings', 'unit' => 'lght', 'qty' => $this->with_wastage($perimeter*2*0.167,0.2,true)];
+            // centers = 0.6 and length for each stirrup = 1.2    factor = 0.1677
+            $foundations ['Steel Reinforcg Deformed Rnd Bar 10mmx6m'] = ['sku' => '', 'usage' => 'starters', 'unit' => 'lght', 'qty' => $this->with_wastage(($perimeter/0.6)*1.2*0.167,0.1,true)];
+
             //From Qoutake : Area *.006
             $foundations ['Black Annealed Tie Wire 230mm 1 Kg Bndle'] = ['sku' => '', 'usage' => '', 'unit' => 'each', 'qty' => ceil($this->shed_area * .006)];
 
-            $perimeter = (($this->bay_spacing * $this->bays) + $this->building_depth) * 2;
-            $foundations ['Steel Reinforcg Deformed Rnd Bar 10mmx6m'] = ['sku' => '35001216', 'usage' => 'starters', 'unit' => 'lght', 'qty' => ceil(($perimeter * 2) / 6)];
-            $foundations ['Steel Reinforcg Deformed Rnd Bar 12mmx6m'] = ['sku' => '35001280', 'usage' => 'footings', 'unit' => 'lght', 'qty' => ceil(($perimeter / 0.6) / 6)];
+            $foundations ['Reinf Mesh SE62 4.7Mx2.03M 7.61cvr [250lap]'] = ['sku' => '', 'usage' => '', 'unit' => 'sht', 'qty' => ceil($this->shed_area / 7.61)];
 
         }
 
@@ -134,10 +126,12 @@ class StandardTakeOff extends Component
         $foundations ['Structural Concrete 17.5MPa 19mm']['poles'] = ['sku' => '', 'usage' => 'poles', 'unit' => 'm3', 'qty' => $post];
         //wastage 10%
         $columns = round($this->with_wastage((($this->num_columns / 2) * (pi() * pow(.2, 2) * .4)), 0.10, false), 3);
+
         $foundations['Structural Concrete 17.5MPa 19mm']['columns'] = ['sku' => '', 'usage' => 'columns', 'unit' => 'm3', 'qty' => $columns];
 
         foreach ($foundations as $key => $foundation) {
-            $item = Item::where('description', $key)->first();
+            $item_key = $key=='GAP 65 Metal @150mm'?'GAP 65 Metal':$key;
+            $item = Item::where('description', $item_key)->first();
             foreach ($foundation as $key2 => $value) {
                 if (is_array($foundation[$key2])) {
                     $value['sku'] = $item != null ? $item->sku : '999999';
@@ -148,13 +142,26 @@ class StandardTakeOff extends Component
                 }
             }
         }
+
         return $foundations;
     }
 
     public function ext_framings($job)
     {
+        $ext_framings[] = ['post' => $this->poles($job)];
         $ext_framings[] = $this->rafters($job);
-//        dd($ext_framings);
+        $ext_framings[] = ['purlins' => $this->purlins($job)];
+        $ext_framings[] = $this->girts_and_columns($job);
+        return $ext_framings;
+    }
+
+    public function framing_hardwares($job)
+    {
+        $hardwares[] = $this->fixings_fasteners($job);
+        $hardwares[] = $this->brace_with_tensioners($job);
+        $hardwares[] = $this->bolts_and_washers($job);
+
+        return $hardwares;
     }
 
     public function claddings($job)
@@ -168,6 +175,7 @@ class StandardTakeOff extends Component
         //Doors
         $roller_door_opener = 0;
         $roller_doors = [];
+        $trim = 0;
         foreach ($facades as $facade) {
             if (isset($facade->height)) {
                 $openings++;
@@ -178,7 +186,14 @@ class StandardTakeOff extends Component
             if ($facade->type == "Roller Door") {
                 $roller_door_opener++;
                 $roller_doors = array_merge_recursive($roller_doors, ['Roller Door ' . $facade->height . 'h x ' . $facade->width . 'w' => 1]);
+                $trim += $facade->height * 2 + $facade->width;
+
             }
+        }
+
+        $door_trim = [];
+        if ($trim != 0) {
+            $door_trim ['200x25 mm Rad No1 H3.2 PG'] = ['sku' => '', 'usage' => 'door trim', 'unit' => 'mtr', 'qty' => $trim];
         }
 
         $roller_door_opener = ($roller_door_opener != 0 ? ['Roller Door Auto Opener Unit' => ['sku' => '30600003', 'unit' => 'each', 'qty' => $roller_door_opener]] : []);
@@ -198,12 +213,11 @@ class StandardTakeOff extends Component
             $opening_height += 2.1;
             $opening_width += 0.81;
             $opening_area += 2.1 * 0.81;
-            $pa_door = ['Hume Solicore Duracote Door 1980 x 810 x 40' => ['sku' => 'DOHDC19810', 'unit' => 'EACH', 'qty' => 1]];
-            $pa_door = ['200x25 mm Rad No1 H3.2 PG' => ['sku' => '', 'unit' => 'mtr', 'qty' => ((2.1 * 4) + (0.81 * 4))]];
-
+            $pa_door ['Hume Solicore Duracote Door 1980 x 810 x 40'] = ['sku' => 'DOHDC19810', 'unit' => 'EACH', 'qty' => 1];
 
         }
-        $doors = array_merge($roller_doors, $roller_door_opener, $pa_door);
+
+        $doors = array_merge($roller_doors, $roller_door_opener, $pa_door, $door_trim);
 
         //Opening Sealant and Tapes
 
@@ -216,10 +230,12 @@ class StandardTakeOff extends Component
         $sealants ['Bostik Fill-A-Gap Gap Filler'] = ['sku' => '', 'usage' => '', 'unit' => '', 'qty' => 1];
         $sealants ['Fosroc Silaflex RTV Clear   375ml'] = ['sku' => '', 'usage' => '', 'unit' => '', 'qty' => 1];
 
+        $cladding_materials = $this->get_cladding_material($job);
+
 
         //Roof Cladding TODO use cladding materials according to the job details
         $roof_area = ($this->building_depth + ($job['front_overhang'] != 'no overhang' ? 1.1 : 0)) * ($this->bay_spacing * $this->bays + 0.1);
-        $roofs ['Six Rib Colorsteel 0.40g  Endura'] = ['sku' => '', 'usage' => '', 'unit' => '', 'qty' => $roof_qty = $this->with_wastage($roof_area * 1.315 * 1.004, .1)];
+        $roofs [$cladding_materials['roof']] = ['sku' => '', 'usage' => '', 'unit' => '', 'qty' => $roof_qty = $this->with_wastage($roof_area * 1.315 * 1.004, .1)];
         //Roof Screws
         $roofs ['Timbertite Screw 12g x 65mm for Low Rib'] = ['sku' => '', 'usage' => '', 'unit' => '', 'qty' => $roof_qty * 4.6];
         //Roof Underlay and Netting
@@ -228,13 +244,16 @@ class StandardTakeOff extends Component
 
         //Wall Cladding
         $wall_area = ($this->rear_height * ($this->bay_spacing * $this->bays + 0.1)) + ($this->front_height * ($this->bay_spacing * $this->bays + 0.1)) + (($this->front_height * $this->building_depth + 0.1) * 2);
-        $walls ['Six Rib Colorsteel 0.40g  Endura'] = ['sku' => '', 'usage' => '', 'unit' => '', 'qty' => $wall_qty = $this->with_wastage(($wall_area - $opening_area) * 1.315 * 1.004, .1)];
+
+
+        $walls [$cladding_materials['wall']] = ['sku' => '', 'usage' => '', 'unit' => '', 'qty' => $wall_qty = $this->with_wastage(($wall_area - $opening_area) * 1.315 * 1.004, .1)];
         //Wall Screws
         $walls ['Timbertite Screw 12g x 65mm for Low Rib'] = ['sku' => '', 'usage' => '', 'unit' => '', 'qty' => $wall_qty * 4.6];
         //Wall Underlay
         $walls ['Thermakraft Watergate Wrap 1370mmx50m'] = ['sku' => '', 'usage' => '', 'unit' => '', 'qty' => $this->with_wastage($wall_area * 1 * 0.022153, 0.1, true)];
         $walls ['Vermin Trap'] = ['sku' => '', 'usage' => 'cladding', 'unit' => 'mtr', 'qty' => ($this->building_depth * 2) + (2 * ($this->bays * $this->bay_spacing))];
         $flashings ['Coloursteel Corner Flashing'] = ['sku' => '', 'usage' => 'corners', 'unit' => 'mtr', 'qty' => ($this->front_height + $this->rear_height) * 2];
+        $flashings ['Coloursteel Flashing to Opening'] = ['sku' => '', 'usage' => 'openings', 'unit' => 'mtr', 'qty' => $opening_height * 2 + $opening_width];
 
         //Overhang Cladding
         $sheet_length = 2.4;
@@ -302,27 +321,6 @@ class StandardTakeOff extends Component
         }
 
         return $rainwater_systems;
-    }
-
-    public function concretes($job)
-    {
-
-        $item = Item::where('description', 'Structural Concrete 17.5MPa 19mm')->first();
-
-        if ($job['floor_type'] == "Concrete") {
-            $slab = round($this->shed_area * .1 + ($this->shed_area * .1 * .05), 2);
-            $concrete['slab'] = ['Structural Concrete 17.5MPa 19mm' => ['sku' => $item->sku, 'unit' => 'm3', 'qty' => $slab]];
-        }
-        //with 10% wastage
-        $post = round(($this->num_poles * (pi() * pow(.3, 2) * 1.2)) + ((8 * (pi() * pow(.3, 2) * 1.2)) * .10), 3);
-//        dd($post);
-        //with 10% wastage
-        $columns = round((($this->num_columns / 2) * (pi() * pow(.2, 2) * .4) + ((($this->num_columns / 2) * (pi() * pow(.2, 2) * .4)) * .10)), 3);
-
-        $concrete['poles'] = ['Structural Concrete 17.5MPa 19mm' => ['sku' => $item != null ? $item->sku : '999999', 'unit' => 'm3', 'qty' => $post]];
-        $concrete['columns'] = ['Structural Concrete 17.5MPa 19mm' => ['sku' => $item != null ? $item->sku : '999999', 'unit' => 'm3', 'qty' => $columns]];
-
-        return $concrete;
     }
 
     public function rafters($job)
@@ -576,9 +574,9 @@ class StandardTakeOff extends Component
 //        dd($knm_internal_member[1], $el_internal_member[1]);
         $rafter_with_prop = "N/A";
         if ($this->is_fully_open && $job['clearspan'] == 'yes') {
-            $rafter_with_prop = $internal_rafter_span <= 6 ? $open_internal_members2[max($knm_internal_member['num'], $el_internal_member['num']) - 1] : 'N / A';
+            $rafter_with_prop = $internal_rafter_span <= 6 ? $open_internal_members2[max($knm_internal_member['num'], $el_internal_member['num']) - 1] : 'N/A';
         } else {
-            $rafter_with_prop = $internal_rafter_span <= 6 ? $enclosed_internal_members2[max($knm_internal_member['num'], $el_internal_member['num']) - 1] : 'N / A';
+            $rafter_with_prop = $internal_rafter_span <= 6 ? $enclosed_internal_members2[max($knm_internal_member['num'], $el_internal_member['num']) - 1] : 'N/A';
         }
 
 //=================================================================================================================================//
@@ -660,12 +658,12 @@ class StandardTakeOff extends Component
             $prop_member = '150x50 mm Rad MSG8 H3.2 MG Wet 3.0 ';
         }
 
+
         $internal_member = $this->internal_rafter_member['width'] . 'x' . $this->internal_rafter_member['thickness'] . ' mm ' . $this->internal_rafter_member['description'];
         $external_member = $this->external_rafter_member['width'] . 'x' . $this->external_rafter_member['thickness'] . ' mm ' . $this->external_rafter_member['description'];
 
         $internal = [$internal_member . ' ' . $this->get_material_length(($this->building_depth > 6 ? $this->building_depth / 2 : $this->building_depth)) => ($this->building_depth > 6 ? ($this->bays * 4) - 4 : ($this->bays * 2) - 2)];
         $external = [$external_member . ' ' . $this->get_material_length(($this->building_depth > 6 ? $this->building_depth / 2 : $this->building_depth)) => ($this->building_depth > 6 ? 4 : 2)];
-
         $rafters = array_merge_recursive($internal, $external);
 
 
@@ -677,20 +675,39 @@ class StandardTakeOff extends Component
                 $rafters[$key] = ['sku' => $item != null ? $item->sku : '999999', 'unit' => 'lght', 'qty' => ($rafter)];
             }
         }
-        $this->num_rafters = array_sum($rafters);
 
-        if ($rafter_with_prop != 'N/A') {
-
-            $member = str_replace('MSG8', 'SG8', $prop_member) . '[MSG]';
-            $item = Item::where('description', $prop_member)->first();
-
-            $props = ($this->building_depth > 6 ? ($this->bays * 4) - 4 : ($this->bays * 2) - 2) * 2;
-            $this->num_props = $props;
-            return array('rafters' => $rafters, 'prop' => [$prop_member => ['sku' => $item != null ? $item->sku : '999999', 'unit' => 'lght', 'qty' => ceil(($props * 1.4142) / 3)]]);
-        } else {
-            return array('rafters' => $rafters);
-            $this->num_props = 0;
+        $soffit_nogs = [];
+        if ($job['front_overhang'] != 'no overhang') {
+            $item = Item::where('description', '90x45 mm Rad MSG8 H3.2 MG Wet 3.0')->first();
+            $soffit_nogs['90x45 mm Rad MSG8 H3.2 MG Wet 3.0'] = ['sku' => $item != null ? $item->sku : '999999', 'unit' => 'lght', 'qty' => $this->bays * 2];
         }
+
+        $this->num_props = 0;
+        if ($job['front_overhang'] == 'canopy') {
+            $this->num_props = $this->bays + 1;
+        }
+
+        $props = [];
+        if ($rafter_with_prop != 'N/A') {
+            $item = Item::where('description', $prop_member)->first();
+            $this->num_props += ($this->building_depth > 6 ? ($this->bays * 4) - 4 : ($this->bays * 2) - 2) * 2;
+            $props = [$prop_member => ['sku' => $item != null ? $item->sku : '999999', 'unit' => 'lght', 'qty' => ceil(($this->num_props * 1.4142) / 3)]];
+        }
+
+        return array('rafters' => $rafters, 'soffit nogs' => $soffit_nogs, 'prop' => $props);
+
+//        if ($rafter_with_prop != 'N/A') {
+//
+//            $member = str_replace('MSG8', 'SG8', $prop_member) . '[MSG]';
+//            $item = Item::where('description', $prop_member)->first();
+//
+//            $props = ($this->building_depth > 6 ? ($this->bays * 4) - 4 : ($this->bays * 2) - 2) * 2;
+//            $this->num_props = $props;
+//            return array('rafters' => $rafters,'soffit nogs'=>$soffit_nogs, 'prop' => [$prop_member => ['sku' => $item != null ? $item->sku : '999999', 'unit' => 'lght', 'qty' => ceil(($props * 1.4142) / 3)]]);
+//        } else {
+//            $this->num_props = 0;
+//            return array('rafters' => $rafters,'soffit nogs'=>$soffit_nogs);
+//        }
 
     }
 
@@ -706,15 +723,6 @@ class StandardTakeOff extends Component
             '39.15' => ['diameter' => '225mm', 'description' => 'SED'],
             '56.56' => ['diameter' => '250mm', 'description' => 'SED'],
         ];
-//        $footing_depths =[
-//            ['depth'=>1.2,'dia'=>0.6,'su'=>65,'phi'=>0.8,'fsu'=>52,'fo'=>0.6,'hu'=>'','load'=>''];
-//            ['depth'=>1.3,'dia'=>0.6,'su'=>65,'phi'=>0.8,'fsu'=>52,'fo'=>0.6,'hu'=>'','load'=>''];
-//            ['depth'=>1.4,'dia'=>0.6,'su'=>65,'phi'=>0.8,'fsu'=>52,'fo'=>0.6,'hu'=>'','load'=>''];
-//            ['depth'=>1.5,'dia'=>0.6,'su'=>65,'phi'=>0.8,'fsu'=>52,'fo'=>0.6,'hu'=>'','load'=>''];
-//            ['depth'=>1.6,'dia'=>0.6,'su'=>65,'phi'=>0.8,'fsu'=>52,'fo'=>0.6,'hu'=>'','load'=>''];
-//            ['depth'=>1.7,'dia'=>0.6,'su'=>65,'phi'=>0.8,'fsu'=>52,'fo'=>0.6,'hu'=>'','load'=>''];
-//            ['depth'=>1.8,'dia'=>0.6,'su'=>65,'phi'=>0.8,'fsu'=>52,'fo'=>0.6,'hu'=>'','load'=>''];
-//        ];
 
 //      Ch(T) Class D soil * Z * R (1/100) * N(T,D) default
         $CT = 2.28 * $Z * 0.5 * 1.0;
@@ -764,21 +772,20 @@ class StandardTakeOff extends Component
 
         $this->num_poles = $front_poles + $rear_poles + $center_poles;
 
-        $ar1 = array($this->get_material_length($front_pole_length) . 'm ' . $member['description'] . ' ' . $member['diameter'] => $front_poles);
-        $ar2 = array($this->get_material_length($rear_pole_length) . 'm ' . $member['description'] . ' ' . $member['diameter'] => $rear_poles);
-        $ar3 = array($this->get_material_length($this->center_pole_length) . 'm ' . $member['description'] . ' ' . $member['diameter'] => $center_poles);
-
+        $ar1 = array('Pole Round             H5 ' . $this->get_material_length($front_pole_length) . 'm ' . $member['description'] . ' ' . $member['diameter'] => $front_poles);
+        $ar2 = array('Pole Round             H5 ' . $this->get_material_length($rear_pole_length) . 'm ' . $member['description'] . ' ' . $member['diameter'] => $rear_poles);
+        $ar3 = array('Pole Round             H5 ' . $this->get_material_length($this->center_pole_length) . 'm ' . $member['description'] . ' ' . $member['diameter'] => $center_poles);
         $poles = array_merge_recursive($ar1, $ar2, $ar3);
 
-
         foreach ($poles as $key => $pole) {
-            $item = Item::where('description', 'Pole Round             H5 ' . $key)->first();
+            $item = Item::where('description', $key)->first();
             if (is_array($pole)) {
                 $poles[$key] = ['sku' => $item != null ? $item->sku : '999999', 'unit' => 'each', 'qty' => array_sum($pole)];
             } else {
                 $poles[$key] = ['sku' => $item != null ? $item->sku : '999999', 'unit' => 'each', 'qty' => ($pole)];
             }
         }
+
 
         return $poles;
     }
@@ -907,14 +914,12 @@ class StandardTakeOff extends Component
 
         $member = $this->purlin_member['width'] . 'x' . $this->purlin_member['thickness'] . ' mm ' . $this->purlin_member['description'];
 
-        $overhang_purlins = 0;
-        if ($job['front_overhang'] == 'soffit') {
-            $this->num_overhang_purlins_per_bay = 1;
-        } elseif ($job['front_overhang'] == 'soffit') {
-            $this->num_overhang_purlins_per_bay = 2;
-        }
-
         $this->num_purlins_per_bay = ceil($this->building_depth / $purlin_spacing) + 1;
+
+
+        if ($job['front_overhang'] != 'no overhang') {
+            $this->num_overhang_purlins_per_bay += 1;
+        }
 
         $key = $member . ' ' . ($this->get_material_length($this->bay_spacing));
         $item = Item::where('description', $key)->first();
@@ -942,7 +947,7 @@ class StandardTakeOff extends Component
         }
 
 
-        $with_rear_column = $this->bay_spacing >= 4.8 ? true : false;
+        $with_rear_column = $this->bay_spacing >= 4.2 ? true : false;
         $girt_spacing = 1;
 
         $girt_members = [
@@ -1079,6 +1084,7 @@ class StandardTakeOff extends Component
             }
         }
 
+
 //      Columns Qty
         if ($with_side_column) {
             $door_column = $job['pa_door'] != 'none' ? 2 : 0;
@@ -1090,7 +1096,7 @@ class StandardTakeOff extends Component
             }
         } else {
             $door_column = $job['pa_door'] != 'none' ? 4 : 0;
-            $side_a = [$wind_column_b['width'] . 'x' . $wind_column_b['thickness'] . ' mm ' . $wind_column_b['description'] . ' ' . $this->get_material_length(($this->center_pole_length - $this->pole_depth)) => 2 + $facade_column + $door_column];
+            $side_a = [$wind_column_b['width'] . 'x' . $wind_column_b['thickness'] . ' mm ' . $wind_column_b['description'] . ' ' . $this->get_material_length(($this->center_pole_length - $this->pole_depth)) => $facade_column + $door_column];
             $side_b = [$wind_column_b['width'] . 'x' . $wind_column_b['thickness'] . ' mm ' . $wind_column_b['description'] . ' ' . $this->get_material_length(($this->center_pole_length - $this->pole_depth)) => 0];
         }
 
@@ -1101,7 +1107,6 @@ class StandardTakeOff extends Component
         } else {
             $columns = (array_merge_recursive($side_a, $side_b));
         }
-
 
         foreach ($columns as $key => $column) {
 
@@ -1184,11 +1189,13 @@ class StandardTakeOff extends Component
 
     public function bolts_and_washers($job)
     {
+
+
         $bolt_length_allowace = 0.03;
         $pole_min_for_cutout = 0.1;
-//        dd($this->internal_rafter_member);
         $rafter_thickness = $this->internal_rafter_member['thickness'] / 1000;
         $cut_out = $this->pole_size - $pole_min_for_cutout;
+
         if ($rafter_thickness * 2 > $cut_out) {
             $pole_length = round($rafter_thickness * 2 - $cut_out + $this->pole_size + $bolt_length_allowace, 2);
         } else {
@@ -1202,12 +1209,26 @@ class StandardTakeOff extends Component
         $column_length = round(.09 + $bolt_length_allowace, 2);
         $member = $job['wind_load'] == 'High Wind' ? 'M12' : 'M16';
 
-        $pole_prop_bolts = 0;
-        $pole_bolts = ['Engineer Bolt & Nut Galv       ' . ($pole_length * 1000) . 'mm ' . $member => ['sku' => '', 'usage' => 'post', 'unit' => 'each', 'qty' => $pole_prop_bolts += $this->with_center_pole ? ($this->bays + 1) * 8 : ($this->bays + 1) * 4]];
-        $prop_bolts = ['Engineer Bolt & Nut Galv       ' . ($this->with_center_pole ? ($prop_length * 1000) : ($pole_length * 1000)) . 'mm ' . $member => ['sku' => '', 'usage' => 'post', 'unit' => 'each', 'qty' => $pole_prop_bolts += $this->with_center_pole ? (($this->bays + 1) - 2) * 8 : 0]];
-        $column_bolts = ['Engineer Bolt & Nut Galv       ' . ($column_length * 1000) . 'mm M12' => ['sku' => '', 'usage' => 'post', 'unit' => 'each', 'qty' => $num_column_bolts = $this->num_columns]];
+        $bolt_items_M16 = Item::where('description', 'like', '%' . 'Engineer Bolt Galv' . '%' . '%' . 'M16' . '%')->get();
+        $bolt_members_M16 = [];
+        foreach ($bolt_items_M16 as $bolt_item) {
+            $bolt_members_M16[str_replace(['Engineer Bolt Galv', 'M16', 'mm', ' '], '', $bolt_item['description'])] = $bolt_item['description'];
+        }
 
+
+        $bolt_items_M12 = Item::where('description', 'like', '%' . 'Engineer Bolt Galv' . '%' . '%' . 'M12' . '%')->get();
+        $bolt_members_M12 = [];
+        foreach ($bolt_items_M12 as $bolt_item) {
+            $bolt_members_M12[str_replace(['Engineer Bolt Galv', 'M12', 'mm', ' '], '', $bolt_item['description'])] = $bolt_item['description'];
+        }
+
+
+        $pole_prop_bolts = 0;
+        $pole_bolts = [$this->get_member($bolt_members_M16, ($pole_length * 1000)) => ['sku' => '', 'usage' => 'post', 'unit' => 'each', 'qty' => $pole_prop_bolts += $this->with_center_pole ? ($this->bays + 1) * 8 : ($this->bays + 1) * 4]];
+        $prop_bolts = [$this->get_member($bolt_members_M16, ($this->with_center_pole ? ($prop_length * 1000) : ($pole_length * 1000))) => ['sku' => '', 'usage' => 'post', 'unit' => 'each', 'qty' => $pole_prop_bolts += $this->with_center_pole ? (($this->bays + 1) - 2) * 8 : 0]];
+        $column_bolts = [$this->get_member($bolt_members_M12, ($column_length * 1000)) => ['sku' => '', 'usage' => 'post', 'unit' => 'each', 'qty' => $num_column_bolts = $this->num_columns]];
         $bolts = array_merge_recursive($pole_bolts, $prop_bolts, $column_bolts);
+
         foreach ($bolts as $key => $bolt) {
             foreach ($bolt as $key2 => $value) {
                 if (is_array($value)) {
@@ -1271,7 +1292,7 @@ class StandardTakeOff extends Component
 
 //
         $strap_rags = ['Bowmac Strap Rag       B75' => ['sku' => '', 'usage' => 'post', 'unit' => 'each', 'qty' => $this->num_columns]];
-        $nail_plates = ['Tylok Nail Plate    68x120mm  4T10' => ['sku' => '', 'usage' => 'purlins', 'unit' => 'each', 'qty' => $this->with_wastage($this->bays * 4, .05)]];
+        $nail_plates = ['Tylok Nail Plate    68x120mm  4T10' => ['sku' => '', 'usage' => 'purlins', 'unit' => 'each', 'qty' => $num_4t10 = $this->with_wastage($this->bays * 4, .05)]];
         $cpc80 = ['L/lok Concealed Purlin Cleat       CPC80' => ['sku' => '', 'usage' => 'purlins', 'unit' => 'each', 'qty' => $num_cpc80 = (($this->bays * 2) - 2) * 2]];
 
         $num_hanger = (($this->num_purlins_per_bay - 2) * $this->bays) * 2;
@@ -1285,9 +1306,16 @@ class StandardTakeOff extends Component
         //screws
         $screws['Type 17 Screw  14g x 35mm']['purlins'] = ['sku' => '', 'usage' => 'purlins', 'unit' => 'each', 'qty' => $this->with_wastage($hanger_screws * $num_hanger, .05) + ($num_cpc80 * 8)];
 
+        $screws['Type 17 Screw  14g x 75mm']['purlins'] = ['sku' => '', 'usage' => 'purlins', 'unit' => 'each', 'qty' => $this->with_wastage($num_4t10 * 3)];
+
         $screws['Type 17 Screw  14g x 35mm']['column'] = ['sku' => '', 'usage' => 'column', 'unit' => 'each', 'qty' => $this->with_wastage($num_girt_plates * 6, .05)];
 
-        $fixings = array_merge($strap_rags, $nail_plates, $cpc80, $joist_hanger, $girt_plates, $screws);
+        $nails['Nail Galv  Steel Flat Hd 100x4.00mm 500g'] = ['sku' => '', 'usage' => '', 'unit' => 'bag', 'qty' => $this->bays * 2];
+
+        $nails['L/Lok Nail Galv Pan Hd    30x3.15mm 500g'] = ['sku' => '', 'usage' => '', 'unit' => 'pkt', 'qty' => $this->bays * 2];
+
+
+        $fixings = array_merge($strap_rags, $nail_plates, $cpc80, $joist_hanger, $girt_plates, $screws, $nails);
 
 //        dd($fixings);
 
@@ -1308,55 +1336,6 @@ class StandardTakeOff extends Component
 
 
         return $fixings;
-    }
-
-    public function doors($job)
-    {
-        $roller_door_opener = 0;
-        $roller_doors = [];
-        $facades = json_decode($job['bay_facades']);
-//        $facades[0]->height = "3.0";
-        $roller_doors = [];
-        foreach ($facades as $facade) {
-            if ($facade->type == "Roller Door") {
-                $roller_door_opener++;
-                $roller_doors = array_merge_recursive($roller_doors, ['Roller Door ' . $facade->height . 'h x ' . $facade->width . 'w' => 1]);
-            }
-        }
-
-        $roller_door_opener = ($roller_door_opener != 0 ? ['Roller Door Auto Opener Unit' => ['sku' => '30600003', 'unit' => 'each', 'qty' => $roller_door_opener]] : []);
-
-        foreach ($roller_doors as $key => $roller_door) {
-            if (is_array($roller_door)) {
-                $roller_doors[$key] = ['sku' => '999999', 'unit' => 'EACH', 'qty' => array_sum($roller_door)];
-            } else {
-                $roller_doors[$key] = ['sku' => '999999', 'unit' => 'EACH', 'qty' => $roller_door];
-            }
-        }
-
-        $pa_door = [];
-        if ($job['pa_door'] != 'none') {
-            $pa_door = ['PA Door 2.1h x 0.81w' => ['sku' => '999999', 'unit' => 'EACH', 'qty' => 1]];
-        }
-        $doors = array_merge($roller_doors, $roller_door_opener, $pa_door);
-
-        return $doors;
-
-    }
-
-    public function overhang_cladding($job)
-    {
-        $sheet_length = 2.4;
-        $sheet_width = 1.2;
-        if ($job['front_overhang'] == 'soffit') {
-            $soffit_area = $this->bay_spacing * $this->bays * 1;
-            $sheet_area = $sheet_length * $sheet_width;
-            $sheet_qty = (ceil($soffit_area / $sheet_area + ($soffit_area / $sheet_area * .1)));
-            $sheets ['Hardiflex Flat Sheet 4.5x2400x 900mm'] = ['sku' => '', 'usage' => 'soffit', 'unit' => 'sht', 'qty' => $sheet_qty];
-            $sheets ['Impulse Nail & Fuel; Pk 75 ZB20547V'] = ['sku' => '', 'usage' => '', 'unit' => 'sht', 'qty' => $soffit_area * 10 * 0.000350];
-            return ($sheets);
-        }
-        return array();
     }
 
     public function get_ka($area)
@@ -1395,15 +1374,43 @@ class StandardTakeOff extends Component
     public function get_material_length($length, $smallest = 3.0, $highest = 6.0, $interval = .6)
     {
         if ($length == $highest) {
-
             return number_format($length, 1, '.', '');
+        } elseif ($length > $highest) {
+            return number_format(ceil($length), 1, '.', '');
         }
         for ($i = $smallest; $i <= $highest; $i += $interval) {
             if ($length <= $i) {
-
                 return number_format($i, 1, '.', '');
             }
         }
+    }
+
+    public function get_cladding_material($job)
+    {
+        $pitch = $job['roof_pitch'];
+        $finish = str_replace(['/', 'ZR8', 'ZRX'], '', $job['roofing_grade']);
+        $finish = $finish=="Max"?"Maxx":$finish;
+        $roof_profile = $job['roof_cladding'];
+        $wall_profile = $job['wall_cladding'];
+
+        if($roof_profile=="Trapezoidal"){
+            $roof_type = $pitch<=4?'Trimline':'Six Rib';
+            $wall_type = 'Six Rib';
+        }else{
+            $roof_type = $finish=="Zincalume"? 'Corrug':'Corrugated';
+            $wall_type = $finish=="Zincalume"? 'Corrug':'Corrugated';
+        }
+
+        if($finish=="Zincalume"){
+            $cladding_materials['roof'] = $roof_type=='Six Rib'?'Six Rib Colorsteel 0.40g  Endura':$roof_type.' Zincalume 0.40g';
+            $cladding_materials['wall'] = $wall_type=='Six Rib'?'Six Rib Colorsteel 0.40g  Endura':$wall_type.' Zincalume 0.40g';
+        }else{
+            $cladding_materials['roof'] = $roof_type.' Colorsteel 0.40g  '.$finish;
+            $cladding_materials['wall'] = $wall_type.' Colorsteel 0.40g  '.$finish;
+        }
+
+        return $cladding_materials;
+
     }
 
     public function with_wastage($qty, $wastage = 0, $ceil = true)
@@ -1413,6 +1420,46 @@ class StandardTakeOff extends Component
         }
         return ($qty += $qty * $wastage);
 
+    }
+
+
+    public function temp_takeoff()
+    {
+        return $takeoff = [
+            'Foundation' => $this->foundations,
+            'PoleShed Ext Framing' => $this->ext_framings,
+            'PoleShed Framing Hardware' => $this->framing_hardwares,
+            'PoleShed Cladding' => $this->claddings,
+            'RAINWATER SYSTEM' => $this->rainwater_systems
+        ];
+
+    }
+
+    public function downloadPDF()
+    {
+        $this->takeoff = [
+            'Foundation' => $this->foundations,
+            'PoleShed Ext Framing' => $this->ext_framings,
+            'PoleShed Framing Hardware' => $this->framing_hardwares,
+            'PoleShed Cladding' => $this->claddings,
+            'RAINWATER SYSTEM' => $this->rainwater_systems
+        ];
+
+        $pdf = PDF::loadView('pdf.schedule', [
+            'job' => $this->job,
+            'takeoff' => $this->takeoff,
+        ]);
+
+        $pdf->setOption('margin-top', 22);
+        $pdf->setOption('margin-bottom', 17);
+        $pdf->setOptions([
+            'header-html' => view('pdf.header', ['job' => $this->job]),
+            'footer-html' => view('pdf.footer'),
+        ]);
+
+        $name = $this->job['client_ref'] . ' ' . $this->job['job_name'] . ' Schedule of materials_' . Carbon::now()->timestamp . '.pdf';
+        return $pdf->stream($name);
+//        return ;
     }
 
     public function render()

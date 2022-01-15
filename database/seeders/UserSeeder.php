@@ -14,6 +14,6 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        User::create(['name'=>'John Doe','email'=>'john@gmail.com','password'=>'$2y$10$rUd1ospcwd6c9tUzonWZi.oGwbHgMiIf0nSzjjmvCvU2x.D2wUDny']);
+        User::create(['name'=>'John Doe','username'=>'john','email'=>'john@gmail.com','password'=>'$2y$10$rUd1ospcwd6c9tUzonWZi.oGwbHgMiIf0nSzjjmvCvU2x.D2wUDny']);
     }
 }
